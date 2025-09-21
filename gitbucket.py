@@ -8,7 +8,7 @@ found = set()
 threads = 1 #Change for your desired # of threads, usually won't need more than 1 or 2 with default timing
 endtime = time.time() + 3600 #Run for 1hr
 api = 'https://api.github.com/events'
-file = open('gitbuckets.txt', 'w')
+file = open('gitbuckets.txt', 'a+')
 
 def gitnames():
     events = requests.get(api).json()
@@ -19,19 +19,19 @@ def gitnames():
 
         actor = commit["actor"]["login"]
         if (actor != "Copilot") and ("[bot]" not in actor) and (actor != owner):
-            que.put('http://'+actor+'.s3.amazonaws.com')
-        que.put('http://'+owner+'.s3.amazonaws.com')
-        que.put('http://'+repo+'.s3.amazonaws.com')
+            que.put(actor)
+        que.put(owner)
+        que.put(repo)
 
 def trybuckets():
     while True:
         item = que.get()
-        print("trying: " + item)
+        print("trying: http://" + item + '.s3.amazonaws.com')
         try:
-            response = requests.get(item)
+            response = requests.get('http://'+item+'.s3.amazonaws.com')
             if response.status_code == 200:
                 if ("Content" in response.text) and (item not in found):
-                    print("Item found: " + item)
+                    print("Item found: " + item + ", adding to list.")
                     found.add(item)
                     file.write(item + '\n'); file.flush()
         except:
@@ -39,6 +39,9 @@ def trybuckets():
         que.task_done()
 
 def main():
+    file.seek(0)
+    for line in file:
+        found.add(line.strip())
     for _ in range(threads):
         t = Thread(target=trybuckets)
         t.daemon = True
