@@ -50,7 +50,7 @@ def main():
     while time.time() < endtime:
         if que.qsize() < 5:
             gitnames()
-        print(found)
+        #print(found) #Troubleshooting statement
         time.sleep(30) #New links every 30 seconds to avoid repeat scanning, change if needed.
 
 if __name__ == "__main__":
