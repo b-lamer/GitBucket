@@ -15,12 +15,12 @@ Variables such as thread count, total runtime, and name scan frequency can all b
 I believe in my first trial run, it found ~35 public buckets in an hour (with the default settings)
 
 ## See also
-Much inspiration derived from: https://github.com/jordanpotti/AWSBucketDump<br>
+Many aspects inspired by: https://github.com/jordanpotti/AWSBucketDump<br>
 Search-able web bucket DB: http://buckets.grayhatwarfare.com/<br>
 Same idea but with Web Certificates: https://github.com/eth0izzle/bucket-stream
 
 ## To Do
-- Include different permutations of files of the same name
+- Remove more white noise
 - Allow arguments (threads, name/link output, filename, timing, total runtime)
 - Potentially expand to other feeds as Apple/Android apps, Stackoverflow users, etc.
 

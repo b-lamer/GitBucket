@@ -1,0 +1,6 @@
+-bucket
+-media
+-assets
+-prod
+-data
+-backend
