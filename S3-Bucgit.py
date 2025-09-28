@@ -1,6 +1,7 @@
 import requests
 from queue import Queue
 from threading import Thread
+from argparse import ArgumentParser
 import time
 
 with open("permutations.txt") as file:
@@ -8,10 +9,9 @@ with open("permutations.txt") as file:
 
 que = Queue()
 found = set()
-threads = 4 #Usually get rate limited hard with more than 4
-endtime = time.time() + 3600 #Run for 1hr
 api = 'https://api.github.com/events'
-file = open('buckets.txt', 'a+')
+args = None
+file = None
 
 def gitnames():
     events = requests.get(api).json()
@@ -23,12 +23,15 @@ def gitnames():
         actor = commit["actor"]["login"]
         if (actor != "Copilot") and ("[bot]" not in actor) and (actor != owner):
             que.put(actor)
-            permutations(actor)
+            if args.permutate:
+                permutations(actor)
         if (owner != repo):
             que.put(owner)
-            permutations(owner)
+            if args.permutate:
+                permutations(owner)
         que.put(repo)
-        permutations(repo)
+        if args.permutate:
+            permutations(repo)
     
 def trybuckets():
     while True:
@@ -50,17 +53,32 @@ def permutations(orig):
         que.put(orig + perm)
 
 def main():
+    global args,file
+
+    parser = ArgumentParser()
+    parser.add_argument("-o", "--output", default='buckets.txt', required = False, help="Output file name")
+    parser.add_argument("-t", "--threads", type=int, default=4, required = False, help="Number of threads. Higher speed is more likely to get blocked by AWS")
+    parser.add_argument("-f", "--freq", type=int, default=60, required = False, help="How often in seconds new names are collected")
+    parser.add_argument("-r", "--runtime", type=int, default=3600, required = False, help="How long the program will run for, in seconds. Default: 3600 (1 hour)")
+    parser.add_argument("-p", "--permutate", action='store_true', help="Enable permutations")
+    args = parser.parse_args()
+    
+    file = open(args.output, 'a+') ###
     file.seek(0)
     for line in file:
         found.add(line.strip())
+
+    threads = args.threads ###
     for _ in range(threads):
         t = Thread(target=trybuckets)
         t.daemon = True
         t.start()
+    
+    endtime = time.time() + args.runtime ###
     while time.time() < endtime:
         if que.qsize() < 5:
             gitnames()
-        time.sleep(60) #New links every 60s to allow program to catch up. Can lower if permutations are off.
+        time.sleep(args.freq)###
 
 if __name__ == "__main__":
     main()
